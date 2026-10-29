@@ -266,7 +266,7 @@ const store = {
 };
 
 const MODELS = [
-  { key: "genius", label: "العبقري", desc: "أذكى واحد، وحجمه حوالي 1.8 جيجا. تقيل وممكن يسخّن الموبايل، ولو الموبايل ما استحملهوش هيرجع للعادي لوحده.",
+  { key: "genius", label: "العبقري", desc: "أذكى واحد، وحجمه حوالي 1.8 جيجا. محتاج آيفون 15 برو أو أحدث، وعلى الموبايلات الأقدم Safari بيقع، فهيرجع للعادي لوحده.",
     f16: "Qwen2.5-3B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-3B-Instruct-q4f32_1-MLC" },
   { key: "normal", label: "العادي", desc: "ذكي، وحجمه حوالي 1 جيجا.",
     f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
@@ -282,8 +282,17 @@ const $ = (id) => document.getElementById(id);
 let engine = null;
 let busy = false;
 let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
-if (!store.get("migrated_v4", false)) { store.set("model", "genius"); store.set("migrated_v4", true); }
-let selected = store.get("model", "genius");
+// العبقري وقّع Safari على آيفون 12، فبنرجّع اللي كانوا عليه للعادي مرة واحدة
+if (!store.get("migrated_v5", false)) { if (store.get("model", "") === "genius") store.set("model", "normal"); store.set("migrated_v5", true); }
+// حماية من الوقوع: لو الصفحة وقعت وهي بتصحّي عقل، المرة الجاية ننزل للأصغر
+let crashedFrom = null;
+const lastTry = store.get("loading", null);
+if (lastTry && lastTry.model) {
+  const smaller = { genius: "normal", normal: "light" }[lastTry.model];
+  if (smaller) { crashedFrom = lastTry.model; store.set("model", smaller); }
+  store.set("loading", null);
+}
+let selected = store.get("model", "normal");
 let tts = store.get("tts", true);
 
 /* ---------------- الذاكرة ---------------- */
@@ -595,8 +604,10 @@ async function loadEngine(showProgress) {
     if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = /cache|Loading model from cache/i.test(r.text || "") ? `بيصحى من الموبايل... ${p}%` : `بيتحمّل... ${p}% (أول مرة بس)`; }
     setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيجهّز العقل... (ممكن ياخد دقيقة)");
   };
+  store.set("loading", { model: m.key, at: Date.now() });
   if (engine) { await engine.reload(id, CHAT_OPTS); }
   else engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProgress }, CHAT_OPTS);
+  store.set("loading", null);
   store.set("model", selected); store.set("ready", true);
   $("currentModel").textContent = `${m.label}: ${m.desc}`;
   setStatus("جاهز ومستنيك"); setBusy(false);
@@ -664,6 +675,10 @@ function showSlowHelp() {
 setBusy(true);
 renderOptions();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if (crashedFrom) {
+  const from = MODELS.find((x) => x.key === crashedFrom).label, to = MODELS.find((x) => x.key === selected).label;
+  bubble("err", `Safari وقع وهو بيشغّل «${from}» لأنه أتقل من رامات الموبايل، فنزلتلك لـ«${to}» لوحدي.`);
+}
 if (store.get("ready", false)) {
   // العقل متحمّل قبل كده: بيصحى من الموبايل نفسه من غير تحميل
   setBusy(false);
