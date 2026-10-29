@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>عم حسن</title>
+<meta name="description" content="مساعد مصري ابن بلد، عقله شغال جوه موبايلك من غير نت">
+<meta name="theme-color" content="#0e5c4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="عم حسن">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap">
+<style>
+/* التصميم: قهوة بلدي بالليل — أخضر غامق زي باب القهوة، ونحاسي زي كنكة الشاي، والكلام في فقاعات بسيطة */
+:root {
+  --bg: #f3f5f1;
+  --surface: #ffffff;
+  --ink: #1b2422;
+  --muted: #5d6b67;
+  --brand: #0e5c4f;
+  --brand-ink: #ffffff;
+  --copper: #b8692a;
+  --bubble-me: #0e5c4f;
+  --bubble-me-ink: #ffffff;
+  --bubble-him: #e6ece8;
+  --line: #d5ddd8;
+  --danger: #b3261e;
+  --font-display: "Lalezar", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1614; --surface: #17211e; --ink: #e8eeeb; --muted: #9aaba5;
+    --brand: #2f9c86; --brand-ink: #06110e; --copper: #e0954f;
+    --bubble-me: #2f9c86; --bubble-me-ink: #06110e; --bubble-him: #1f2b28;
+    --line: #2a3733; --danger: #f2b8b5; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1614; --surface: #17211e; --ink: #e8eeeb; --muted: #9aaba5;
+  --brand: #2f9c86; --brand-ink: #06110e; --copper: #e0954f;
+  --bubble-me: #2f9c86; --bubble-me-ink: #06110e; --bubble-him: #1f2b28;
+  --line: #2a3733; --danger: #f2b8b5; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.6 var(--font-body);
+  display: flex; flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--copper); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+header {
+  background: var(--brand); color: var(--brand-ink);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  padding-bottom: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; gap: 12px;
+}
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex: none;
+  background: var(--copper); color: #fff; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 22px; line-height: 1;
+}
+.who { flex: 1; min-width: 0; }
+.who h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+.status { font-size: 13px; opacity: .85; }
+.icon-btn {
+  background: transparent; border: 0; width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; color: inherit;
+}
+.icon-btn svg { width: 24px; height: 24px; }
+
+main {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.msg { max-width: 85%; padding: 10px 14px; border-radius: 18px; white-space: pre-wrap; word-wrap: break-word; min-width: 0; }
+.msg.me { align-self: flex-start; background: var(--bubble-me); color: var(--bubble-me-ink); border-bottom-right-radius: 6px; }
+.msg.him { align-self: flex-end; background: var(--bubble-him); border-bottom-left-radius: 6px; }
+.msg.err { align-self: center; background: transparent; color: var(--danger); text-align: center; font-size: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.actions a {
+  text-decoration: none; background: var(--surface); color: var(--brand);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 500;
+}
+.typing { display: inline-flex; gap: 4px; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25 } 40% { opacity: 1 } }
+
+.hello { margin: auto 0; text-align: center; display: grid; gap: 10px; padding-block: 24px; }
+.hello h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 32px; color: var(--brand); text-wrap: balance; }
+.hello p { margin: 0; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+.chips button { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+
+footer {
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-top: 10px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+.listening { text-align: center; color: var(--copper); font-weight: 500; margin-bottom: 8px; min-height: 1.6em; }
+.composer { display: flex; align-items: flex-end; gap: 8px; }
+textarea {
+  flex: 1; min-width: 0; resize: none; max-height: 140px; border: 1px solid var(--line); border-radius: 22px;
+  padding: 10px 16px; background: var(--bg); color: var(--ink); font: inherit;
+}
+.send, .mic { flex: none; border: 0; border-radius: 50%; display: grid; place-items: center; }
+.send { width: 44px; height: 44px; background: var(--bubble-him); color: var(--brand); }
+.mic { width: 56px; height: 56px; background: var(--brand); color: var(--brand-ink); }
+.mic.on { background: var(--danger); color: #fff; animation: pulse 1.2s infinite; }
+.send svg, .mic svg { width: 26px; height: 26px; }
+button:disabled { opacity: .45; cursor: default; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(179,38,30,.4) } 50% { box-shadow: 0 0 0 10px rgba(179,38,30,0) } }
+
+/* شاشة التحميل والإعدادات */
+.sheet {
+  position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 24px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+.sheet-inner { max-width: 520px; margin: 0 auto; display: grid; gap: 16px; }
+.sheet h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 34px; color: var(--brand); line-height: 1.2; }
+.sheet h3 { margin: 8px 0 0; font-size: 15px; color: var(--muted); font-weight: 500; letter-spacing: .02em; }
+.sheet p { margin: 0; color: var(--muted); }
+.option {
+  display: flex; gap: 12px; align-items: flex-start; text-align: start;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 14px; width: 100%;
+}
+.option[aria-pressed="true"] { border-color: var(--brand); }
+.option b { display: block; }
+.option small { color: var(--muted); }
+.dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--muted); flex: none; margin-top: 3px; }
+.option[aria-pressed="true"] .dot { border-color: var(--brand); background: radial-gradient(var(--brand) 45%, transparent 50%); }
+.primary {
+  background: var(--brand); color: var(--brand-ink); border: 0; border-radius: 14px; padding: 14px; font-size: 17px; font-weight: 700;
+}
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--copper); transition: width .3s; }
+.progress-text { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--muted); }
+.mem { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+.mem span { flex: 1; min-width: 0; }
+.mem button { background: transparent; border: 0; color: var(--danger); font-size: 14px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.switch { width: 52px; height: 30px; border-radius: 99px; border: 0; background: var(--line); position: relative; flex: none; }
+.switch::after { content: ""; position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: right .2s; }
+.switch[aria-checked="true"] { background: var(--brand); }
+.switch[aria-checked="true"]::after { right: 25px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="avatar" aria-hidden="true">ح</div>
+  <div class="who">
+    <h1 id="title">عم حسن</h1>
+    <div class="status" id="status">بيصحصح...</div>
+  </div>
+  <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<main id="chat" aria-live="polite">
+  <div class="hello" id="hello">
+    <h2>أهلًا يا باشا، أنا عم حسن</h2>
+    <p>دوس على المايك واتكلم، أو اكتبلي.</p>
+    <div class="chips" id="chips">
+      <button type="button">عامل إيه يا عم حسن؟</button>
+      <button type="button">احكيلي نكتة</button>
+      <button type="button">اكتبلي رسالة اعتذار لصاحبي</button>
+      <button type="button">أعمل فطار إيه النهارده؟</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="listening" id="listening" hidden></div>
+  <form class="composer" id="form">
+    <button type="button" class="mic" id="mic" aria-label="اتكلم">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg>
+    </button>
+    <textarea id="input" rows="1" placeholder="اكتب اللي إنت عايزه..." aria-label="رسالتك"></textarea>
+    <button type="submit" class="send" id="send" aria-label="ابعت">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21 23 12 2 3v7l15 2-15 2z" transform="scale(-1,1) translate(-24,0)"/></svg>
+    </button>
+  </form>
+</footer>
+
+<!-- أول تشغيل: تحميل العقل -->
+<section class="sheet" id="setup" hidden>
+  <div class="sheet-inner">
+    <h2>أهلًا بيك عند عم حسن</h2>
+    <p>عقل عم حسن بيشتغل جوه موبايلك، من غير نت ومن غير ما كلامك يخرج من الموبايل. محتاجين نحمّله مرة واحدة بس.</p>
+    <h3>اختار العقل</h3>
+    <div id="modelOptions" style="display:grid;gap:10px"></div>
+    <div class="note">💡 حمّله على واي فاي، وخلّي الصفحة مفتوحة لحد ما يخلص.</div>
+    <div id="dl" hidden style="display:grid;gap:8px">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="progress-text" id="progressText">بنبدأ...</div>
+    </div>
+    <button class="primary" id="startDl">حمّل العقل</button>
+    <p class="progress-text" id="setupError" style="color:var(--danger)" hidden></p>
+  </div>
+</section>
+
+<!-- الإعدادات -->
+<section class="sheet" id="settings" hidden>
+  <div class="sheet-inner">
+    <div class="row"><h2>الإعدادات</h2><button class="ghost" id="closeSettings">تمام</button></div>
+    <div class="row">
+      <div><b>يقرا الرد بصوت</b><br><small style="color:var(--muted)">بصوت الموبايل العربي</small></div>
+      <button class="switch" id="ttsSwitch" role="switch" aria-checked="true" aria-label="يقرا الرد بصوت"></button>
+    </div>
+    <h3>اللي فاكره عنك</h3>
+    <p style="font-size:14px">قولّه «افتكر إن ...» عشان يحفظ، أو «انسى ...» عشان يمسح.</p>
+    <div id="memList" style="display:grid;gap:8px"></div>
+    <h3>العقل</h3>
+    <p id="currentModel" style="font-size:14px"></p>
+    <button class="ghost" id="changeModel">غيّر العقل</button>
+    <button class="ghost" id="clearChat">امسح المحادثة</button>
+    <div class="note">على الآيفون: من Safari دوس زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»، عشان عم حسن يبقى زي أي تطبيق.</div>
+  </div>
+</section>
+
+<script type="module">
+import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.82/+esm";
+
+/* ---------------- الإعدادات المحفوظة ---------------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("sahbi_" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("sahbi_" + k, JSON.stringify(v)); } catch {} },
+};
+
+const MODELS = [
+  { key: "normal", label: "العادي", desc: "أذكى، وحجمه حوالي 1 جيجا. مناسب لآيفون 12 وأحدث.",
+    f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
+  { key: "light", label: "الخفيف", desc: "أسرع وأصغر (حوالي 400 ميجا)، بس أبسط في الكلام.",
+    f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
+];
+
+const $ = (id) => document.getElementById(id);
+let engine = null;
+let busy = false;
+let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
+let selected = store.get("model", "normal");
+let tts = store.get("tts", true);
+
+/* ---------------- الذاكرة ---------------- */
+const mem = {
+  all: () => store.get("mem", []),
+  add(t) { const a = mem.all(); t = t.trim(); if (t && !a.includes(t)) { a.push(t); store.set("mem", a.slice(-30)); } },
+  forget(q) { const a = mem.all(); const b = a.filter((m) => !m.includes(q.trim())); store.set("mem", b); return a.length - b.length; },
+  removeAt(i) { const a = mem.all(); a.splice(i, 1); store.set("mem", a); },
+};
+
+/* ---------------- الشخصية ---------------- */
+function persona() {
+  const d = new Date();
+  const days = ["الحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"];
+  const time = `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} الساعة ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const m = mem.all();
+  return `إنت "عم حسن"، مساعد مصري ابن بلد شغال جوه الموبايل. بتتكلم عامية مصرية شعبي بس، زي كلام القهوة والحارة، ومش بتتكلم فصحى أبدًا.
+- دمك خفيف، وكلامك قصير: جملة لتلات جمل، إلا لو صاحبك طلب كتابة طويلة.
+- بتقول أحيانًا: "يا باشا"، "يا معلم"، "من عينيا"، "ولا يهمك"، "على راسي".
+- محترم دايمًا، من غير شتيمة.
+- إنت شغال من غير نت: ما تعرفش أخبار النهارده ولا الأسعار ولا الماتشات. لو اتسألت عنها قول كده.
+- لو مش متأكد قول "مش متأكد يا باشا". ما تألفش.
+- ما تقدرش تظبط منبه ولا تولّع كشاف ولا تبعت رسايل بنفسك. لو طلب اتصال أو رسالة أو خرايط، التطبيق هيطلعله زرار يدوس عليه، فقوله "دوس على الزرار اللي تحت".
+- لو طلب كتابة رسمية اكتبها زي ما طلب، وكلامك حواليها مصري.
+مثال:
+صاحبك: عامل إيه؟
+إنت: الحمد لله يا باشا، فل الفل. أؤمرني؟
+صاحبك: إيه أحسن فطار؟
+إنت: طبق فول بالزيت الحار وعيش بلدي سخن وطعمية، ده فطار الملوك يا كبير.
+الوقت دلوقتي: ${time}
+${m.length ? "اللي إنت فاكره عن صاحبك:\n- " + m.join("\n- ") : ""}`;
+}
+
+/* ---------------- أوامر الموبايل (أزرار يدوس عليها) ---------------- */
+const APPS = [
+  [/واتس|whatsapp/i, "واتساب", "https://wa.me/"],
+  [/يوتيوب|youtube/i, "يوتيوب", "https://www.youtube.com/"],
+  [/انستا|instagram/i, "إنستجرام", "https://www.instagram.com/"],
+  [/فيس|facebook/i, "فيسبوك", "https://www.facebook.com/"],
+  [/تيك ?توك|tiktok/i, "تيك توك", "https://www.tiktok.com/"],
+  [/سناب|snap/i, "سناب", "https://www.snapchat.com/"],
+  [/تويتر|اكس\b|twitter/i, "إكس", "https://x.com/"],
+];
+function toLatinDigits(s) { return s.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)); }
+function detectActions(text) {
+  const t = toLatinDigits(text);
+  const out = [];
+  const num = (t.match(/\+?\d[\d\s-]{6,}\d/) || [])[0]?.replace(/[\s-]/g, "");
+  if (num && /(اتصل|كلم|كلّم|رن|رنّ|تصل)/.test(t)) out.push(["📞 اتصل بـ " + num, "tel:" + num]);
+  if (num && /(رسال|ابعت|إبعت|ارسل|أرسل|مسج)/.test(t)) {
+    const body = (t.match(/(?:بـ?|إن|ان|:)\s*["«]?(.{3,})["»]?$/) || [])[1] || "";
+    out.push(["✉️ رسالة لـ " + num, "sms:" + num + (body ? "&body=" + encodeURIComponent(body) : "")]);
+    out.push(["💬 واتساب لـ " + num, "https://wa.me/" + num.replace(/^\+/, "").replace(/^0(?=1\d{9}$)/, "20").replace(/^0(?=5\d{8}$)/, "966") + (body ? "?text=" + encodeURIComponent(body) : "")]);
+  }
+  const place = (t.match(/(?:وديني|ودّيني|خريطة|خرايط|خرائط|طريق)\s+(?:على|لـ|ل|إلى|الى)?\s*(.{2,40})/) || [])[1];
+  if (place) out.push(["🗺️ " + place.trim(), "https://maps.apple.com/?q=" + encodeURIComponent(place.trim())]);
+  if (/(افتح|إفتح|شغل|شغّل)/.test(t)) for (const [re, name, url] of APPS) if (re.test(t)) out.push(["📱 افتح " + name, url]);
+  return out;
+}
+
+/* ---------------- الذاكرة من كلام صاحبك ---------------- */
+function handleMemory(text) {
+  let m;
+  if ((m = text.match(/^(?:افتكر|إفتكر|احفظ|خلي في بالك|خلّي في بالك)\s+(?:إن|ان)?\s*(.+)/))) { mem.add(m[1]); return "🧠 افتكرت"; }
+  if ((m = text.match(/^(?:انسى|إنسى|امسح)\s+(.+)/))) { return mem.forget(m[1]) ? "🧹 نسيتها" : null; }
+  if ((m = text.match(/(?:^|\s)اسمي\s+([^\s،.,!؟?]{2,20})/))) { mem.add("اسم صاحبي " + m[1]); return "🧠 افتكرت اسمك"; }
+  return null;
+}
+
+/* ---------------- واجهة المحادثة ---------------- */
+const chat = $("chat");
+function bubble(cls, text = "") {
+  $("hello")?.remove();
+  const el = document.createElement("div");
+  el.className = "msg " + cls;
+  el.textContent = text;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+  return el;
+}
+function addActions(el, actions, note) {
+  if (!actions.length && !note) return;
+  const box = document.createElement("div");
+  box.className = "actions";
+  if (note) { const s = document.createElement("span"); s.textContent = note; s.style.fontSize = "13px"; s.style.opacity = ".8"; box.appendChild(s); }
+  for (const [label, href] of actions) {
+    const a = document.createElement("a");
+    a.href = href; a.textContent = label; a.rel = "noopener";
+    if (href.startsWith("http")) a.target = "_blank";
+    box.appendChild(a);
+  }
+  el.appendChild(box);
+  chat.scrollTop = chat.scrollHeight;
+}
+function setStatus(s) { $("status").textContent = s; }
+function setBusy(b) { busy = b; $("send").disabled = b || !engine; $("mic").disabled = b || !engine; }
+
+async function send(text) {
+  text = text.trim();
+  if (!text || busy || !engine) return;
+  stopSpeaking();
+  $("input").value = ""; autoGrow();
+  bubble("me", text);
+  const memNote = handleMemory(text);
+  const actions = detectActions(text);
+  const reply = bubble("him");
+  reply.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  setBusy(true); setStatus("بيفكّر...");
+  history.push({ role: "user", content: text });
+  history = history.slice(-10);
+  let out = "";
+  try {
+    const stream = await engine.chat.completions.create({
+      messages: [{ role: "system", content: persona() }, ...history],
+      stream: true, temperature: 0.7, top_p: 0.9, max_tokens: 450,
+    });
+    for await (const chunk of stream) {
+      const d = chunk.choices?.[0]?.delta?.content || "";
+      if (!d) continue;
+      out += d;
+      reply.textContent = out;
+      chat.scrollTop = chat.scrollHeight;
+    }
+    out = out.trim() || "معلش يا باشا، ما فهمتش. قولها تاني؟";
+    reply.textContent = out;
+    history.push({ role: "assistant", content: out });
+    addActions(reply, actions, memNote);
+    speak(out);
+  } catch (e) {
+    reply.className = "msg err";
+    reply.textContent = "حصلت مشكلة وأنا بفكر. جرّب تاني يا باشا.\n(" + (e?.message || e) + ")";
+    history.pop();
+  } finally {
+    setBusy(false); setStatus("جاهز ومستنيك");
+  }
+}
+
+$("form").addEventListener("submit", (e) => { e.preventDefault(); send($("input").value); });
+$("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("input").value); } });
+function autoGrow() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 140) + "px"; }
+$("input").addEventListener("input", autoGrow);
+$("chips").addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") send(e.target.textContent); });
+
+/* ---------------- الصوت ---------------- */
+let arVoice = null;
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  arVoice = vs.find((v) => /ar[-_]EG/i.test(v.lang)) || vs.find((v) => /^ar/i.test(v.lang)) || null;
+}
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function clean(t) {
+  return t.replace(/```[\s\S]*?```/g, " ").replace(/https?:\/\/\S+/g, "").replace(/[*#_`>|\[\]]/g, "").slice(0, 600);
+}
+function speak(t) {
+  if (!tts || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(clean(t));
+  u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = 1;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function stopSpeaking() { try { speechSynthesis.cancel(); } catch {} }
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, listening = false;
+$("mic").addEventListener("click", () => {
+  if (!SR) { bubble("err", "المتصفح ده مش بيدعم الكلام بالصوت. اكتب رسالتك، أو افتح الصفحة من Safari."); return; }
+  if (listening) { rec?.stop(); return; }
+  stopSpeaking();
+  rec = new SR();
+  rec.lang = "ar-EG"; rec.interimResults = true; rec.continuous = false;
+  let finalText = "";
+  rec.onstart = () => { listening = true; $("mic").classList.add("on"); $("listening").hidden = false; $("listening").textContent = "سامعك، اتكلم..."; };
+  rec.onresult = (e) => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript;
+    }
+    $("listening").textContent = finalText + interim || "سامعك، اتكلم...";
+  };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed") bubble("err", "محتاج إذن المايك. من الإعدادات ← Safari ← المايكروفون، اختار «سماح».");
+  };
+  rec.onend = () => {
+    listening = false; $("mic").classList.remove("on"); $("listening").hidden = true;
+    if (finalText.trim()) send(finalText);
+  };
+  rec.start();
+});
+
+/* ---------------- تحميل العقل ---------------- */
+async function f16Supported() {
+  try { const a = await navigator.gpu.requestAdapter(); return !!a && a.features.has("shader-f16"); } catch { return false; }
+}
+function modelId(m, f16) { return f16 ? m.f16 : m.f32; }
+
+function renderOptions() {
+  const box = $("modelOptions"); box.innerHTML = "";
+  for (const m of MODELS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "option"; b.setAttribute("aria-pressed", String(m.key === selected));
+    b.innerHTML = `<span class="dot"></span><span><b></b><small></small></span>`;
+    b.querySelector("b").textContent = m.label; b.querySelector("small").textContent = m.desc;
+    b.onclick = () => { selected = m.key; renderOptions(); };
+    box.appendChild(b);
+  }
+}
+
+async function loadEngine(showProgress) {
+  if (!navigator.gpu) throw new Error("NO_WEBGPU");
+  const m = MODELS.find((x) => x.key === selected) || MODELS[0];
+  const id = modelId(m, await f16Supported());
+  const onProgress = (r) => {
+    const p = Math.round((r.progress || 0) * 100);
+    if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = `بيتحمّل... ${p}%`; }
+    setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيصحصح...");
+  };
+  if (engine) { await engine.reload(id); }
+  else engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProgress });
+  store.set("model", selected); store.set("ready", true);
+  $("currentModel").textContent = `${m.label}: ${m.desc}`;
+  setStatus("جاهز ومستنيك"); setBusy(false);
+}
+
+function explain(e) {
+  const msg = String(e?.message || e);
+  if (msg === "NO_WEBGPU") return "المتصفح ده مش بيدعم تشغيل العقل. افتح الصفحة من Safari على iOS 26 أو أحدث.";
+  if (/memory|OOM|allocate/i.test(msg)) return "الموبايل ما استحملش العقل ده. جرّب «الخفيف».";
+  return "التحميل وقف. اتأكد من النت وجرّب تاني.\n(" + msg + ")";
+}
+
+$("startDl").addEventListener("click", async () => {
+  $("startDl").disabled = true; $("dl").hidden = false; $("setupError").hidden = true;
+  try {
+    await loadEngine(true);
+    $("setup").hidden = true;
+  } catch (e) {
+    $("setupError").textContent = explain(e); $("setupError").hidden = false;
+    $("startDl").disabled = false; engine = null;
+  }
+});
+
+/* ---------------- الإعدادات ---------------- */
+function renderMem() {
+  const box = $("memList"); box.innerHTML = "";
+  const a = mem.all();
+  if (!a.length) { const p = document.createElement("p"); p.textContent = "لسه مش فاكر حاجة."; p.style.fontSize = "14px"; box.appendChild(p); return; }
+  a.forEach((t, i) => {
+    const row = document.createElement("div"); row.className = "mem";
+    const s = document.createElement("span"); s.textContent = t;
+    const b = document.createElement("button"); b.textContent = "امسح"; b.onclick = () => { mem.removeAt(i); renderMem(); };
+    row.append(s, b); box.appendChild(row);
+  });
+}
+$("openSettings").onclick = () => { renderMem(); $("ttsSwitch").setAttribute("aria-checked", String(tts)); $("settings").hidden = false; };
+$("closeSettings").onclick = () => { $("settings").hidden = true; };
+$("ttsSwitch").onclick = () => { tts = !tts; store.set("tts", tts); $("ttsSwitch").setAttribute("aria-checked", String(tts)); if (!tts) stopSpeaking(); };
+$("clearChat").onclick = () => { history = []; chat.innerHTML = ""; $("settings").hidden = true; bubble("him", "صفحة جديدة يا باشا، أؤمرني."); };
+$("changeModel").onclick = () => { $("settings").hidden = true; renderOptions(); $("startDl").disabled = false; $("dl").hidden = true; $("setup").hidden = false; };
+
+/* ---------------- البداية ---------------- */
+setBusy(true);
+renderOptions();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if (store.get("ready", false)) {
+  // العقل متحمّل قبل كده: بيصحى من الموبايل نفسه من غير تحميل
+  loadEngine(false).catch((e) => { setStatus("محتاج يتحمّل"); $("setupError").textContent = explain(e); $("setupError").hidden = false; $("setup").hidden = false; });
+} else {
+  setStatus("محتاج يتحمّل أول مرة");
+  $("setup").hidden = false;
+}
+</script>
+</body>
+</html>

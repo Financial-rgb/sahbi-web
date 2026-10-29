@@ -1,0 +1,16 @@
+{
+  "name": "عم حسن",
+  "short_name": "عم حسن",
+  "description": "مساعد مصري ابن بلد، عقله شغال جوه موبايلك من غير نت",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e5c4f",
+  "theme_color": "#0e5c4f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
