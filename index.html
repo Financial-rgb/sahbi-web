@@ -255,17 +255,18 @@ const store = {
 };
 
 const MODELS = [
-  { key: "normal", label: "العادي", desc: "أذكى وكلامه أحسن، وحجمه حوالي 1 جيجا. بيتحمّل أول مرة بس.",
-    f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
-  { key: "light", label: "الخفيف", desc: "أسرع وأصغر (حوالي 350 ميجا)، بس أبسط في الكلام.",
+  { key: "light", label: "الخفيف (المناسب لموبايلك)", desc: "سريع وما بيسخّنش الموبايل، وحجمه حوالي 350 ميجا.",
     f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
+  { key: "normal", label: "الأذكى (تقيل)", desc: "كلامه أحسن، بس تقيل: محتاج آيفون 15 برو أو أحدث، وممكن يسخّن الموبايل.",
+    f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
 ];
 
 const $ = (id) => document.getElementById(id);
 let engine = null;
 let busy = false;
 let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
-let selected = store.get("model", "normal");
+if (!store.get("migrated_v3", false)) { store.set("model", "light"); store.set("migrated_v3", true); }
+let selected = store.get("model", "light");
 let tts = store.get("tts", true);
 
 /* ---------------- الذاكرة ---------------- */
@@ -361,11 +362,18 @@ function addActions(el, actions, note) {
   chat.scrollTop = chat.scrollHeight;
 }
 function setStatus(s) { $("status").textContent = s; }
-function setBusy(b) { busy = b; $("send").disabled = b || !engine; $("mic").disabled = b || !engine; }
+function setBusy(b) { busy = b; $("send").disabled = b; $("mic").disabled = b; }
+let pending = null; // رسالة اتكتبت قبل ما العقل يصحى
 
 async function send(text) {
   text = text.trim();
-  if (!text || busy || !engine) return;
+  if (!text || busy) return;
+  if (!engine) {
+    pending = text; $("input").value = ""; autoGrow();
+    bubble("me", text);
+    showWaking();
+    return;
+  }
   stopSpeaking();
   $("input").value = ""; autoGrow();
   bubble("me", text);
@@ -375,12 +383,12 @@ async function send(text) {
   reply.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
   setBusy(true); setStatus("بيفكّر...");
   history.push({ role: "user", content: text });
-  history = history.slice(-10);
+  history = history.slice(-6);
   let out = "";
   try {
     const stream = await engine.chat.completions.create({
       messages: [{ role: "system", content: persona() }, ...history],
-      stream: true, temperature: 0.7, top_p: 0.9, max_tokens: 450,
+      stream: true, temperature: 0.7, top_p: 0.9, max_tokens: 250,
     });
     for await (const chunk of stream) {
       const d = chunk.choices?.[0]?.delta?.content || "";
@@ -395,9 +403,20 @@ async function send(text) {
     addActions(reply, actions, memNote);
     speak(out);
   } catch (e) {
-    reply.className = "msg err";
-    reply.textContent = "حصلت مشكلة وأنا بفكر. جرّب تاني يا باشا.\n(" + (e?.message || e) + ")";
     history.pop();
+    const m = String(e?.message || e);
+    if (/disposed|device.*lost|out of memory|OOM/i.test(m)) {
+      // الموبايل قفل كارت الشاشة عن العقل (غالبًا لأنه تقيل): نصحيه تاني بالخفيف
+      engine = null;
+      reply.className = "msg err";
+      reply.textContent = "العقل تقيل على الموبايل، فهصحى بالخفيف. ثواني وابعت رسالتك تاني.";
+      selected = "light"; store.set("model", "light");
+      loadEngine(false).then(() => { reply.textContent = "خلاص يا باشا، صحيت. ابعت رسالتك تاني."; reply.className = "msg him"; })
+        .catch((err) => { reply.textContent = explain(err); });
+    } else {
+      reply.className = "msg err";
+      reply.textContent = "حصلت مشكلة وأنا بفكر. جرّب تاني يا باشا.\n(" + m + ")";
+    }
   } finally {
     setBusy(false); setStatus("جاهز ومستنيك");
   }
@@ -480,7 +499,7 @@ async function loadEngine(showProgress) {
   const onProgress = (r) => {
     const p = Math.round((r.progress || 0) * 100);
     if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = /cache|Loading model from cache/i.test(r.text || "") ? `بيصحى من الموبايل... ${p}%` : `بيتحمّل... ${p}% (أول مرة بس)`; }
-    setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيصحصح...");
+    setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيجهّز العقل... (ممكن ياخد دقيقة)");
   };
   if (engine) { await engine.reload(id); }
   else engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProgress });
@@ -501,6 +520,7 @@ $("startDl").addEventListener("click", async () => {
   try {
     await loadEngine(true);
     $("setup").hidden = true;
+    if (pending) { const t = pending; pending = null; chat.lastElementChild?.remove(); send(t); }
   } catch (e) {
     $("setupError").textContent = explain(e); $("setupError").hidden = false;
     $("startDl").disabled = false; engine = null;
@@ -525,13 +545,42 @@ $("ttsSwitch").onclick = () => { tts = !tts; store.set("tts", tts); $("ttsSwitch
 $("clearChat").onclick = () => { history = []; chat.innerHTML = ""; $("settings").hidden = true; bubble("him", "صفحة جديدة يا باشا، أؤمرني."); };
 $("changeModel").onclick = () => { $("settings").hidden = true; renderOptions(); $("startDl").disabled = false; $("dl").hidden = true; $("setup").hidden = false; };
 
+/* ---------------- رسايل الصحيان ---------------- */
+let wakingEl = null;
+function showWaking() {
+  if (wakingEl) return;
+  wakingEl = bubble("him", "استنى ثواني يا باشا، لسه بصحى... أول مرة بعد التحميل ممكن تاخد دقيقة.");
+}
+function showSlowHelp() {
+  const el = bubble("err", "عم الناس طوّل وهو بيصحى. غالبًا العقل «العادي» تقيل على الموبايل ده.");
+  const box = document.createElement("div"); box.className = "actions"; box.style.justifyContent = "center";
+  const light = document.createElement("a"); light.href = "#"; light.textContent = "جرّب الخفيف";
+  light.onclick = (e) => { e.preventDefault(); selected = "light"; renderOptions(); $("startDl").disabled = false; $("dl").hidden = true; $("setup").hidden = false; };
+  const again = document.createElement("a"); again.href = "#"; again.textContent = "حاول تاني";
+  again.onclick = (e) => { e.preventDefault(); location.reload(); };
+  box.append(light, again); el.appendChild(box);
+}
+
 /* ---------------- البداية ---------------- */
 setBusy(true);
 renderOptions();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 if (store.get("ready", false)) {
   // العقل متحمّل قبل كده: بيصحى من الموبايل نفسه من غير تحميل
-  loadEngine(false).catch((e) => { setStatus("محتاج يتحمّل"); $("setupError").textContent = explain(e); $("setupError").hidden = false; $("setup").hidden = false; });
+  setBusy(false);
+  const t0 = Date.now();
+  const watchdog = setInterval(() => {
+    if (engine) { clearInterval(watchdog); return; }
+    if (Date.now() - t0 > 90000) { clearInterval(watchdog); showSlowHelp(); }
+  }, 5000);
+  loadEngine(false).then(() => {
+    clearInterval(watchdog); wakingEl?.remove(); wakingEl = null;
+    if (pending) { const t = pending; pending = null; chat.lastElementChild?.remove(); send(t); }
+  }).catch((e) => {
+    clearInterval(watchdog); wakingEl?.remove();
+    bubble("err", explain(e));
+    showSlowHelp();
+  });
 } else {
   setStatus("محتاج يتحمّل أول مرة");
   $("setup").hidden = false;
