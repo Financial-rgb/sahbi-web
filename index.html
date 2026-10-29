@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>عم الناس</title>
+<title>ميجو</title>
 <meta name="description" content="مساعد مصري ابن بلد، عقله شغال جوه موبايلك من غير نت">
 <meta name="theme-color" content="#0e5c4f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="عم الناس">
+<meta name="apple-mobile-web-app-title" content="ميجو">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -173,9 +173,9 @@ button:disabled { opacity: .45; cursor: default; }
 <body>
 
 <header>
-  <div class="avatar" aria-hidden="true">ن</div>
+  <div class="avatar" aria-hidden="true">م</div>
   <div class="who">
-    <h1 id="title">عم الناس</h1>
+    <h1 id="title">ميجو</h1>
     <div class="status" id="status">بيصحصح...</div>
   </div>
   <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
@@ -185,7 +185,7 @@ button:disabled { opacity: .45; cursor: default; }
 
 <main id="chat" aria-live="polite">
   <div class="hello" id="hello">
-    <h2>أهلًا يا باشا، أنا عم الناس</h2>
+    <h2>أهلًا يا باشا، أنا عم الناس</h2><p style="margin:0;color:var(--copper);font-weight:700">ميجو</p>
     <p>دوس على المايك واتكلم، أو اكتبلي.</p>
     <div class="chips" id="chips">
       <button type="button">عامل إيه يا عم الناس؟</button>
@@ -212,7 +212,7 @@ button:disabled { opacity: .45; cursor: default; }
 <!-- أول تشغيل: تحميل العقل -->
 <section class="sheet" id="setup" hidden>
   <div class="sheet-inner">
-    <h2>أهلًا بيك عند عم الناس</h2>
+    <h2>أهلًا بيك في ميجو</h2>
     <p>عقل عم الناس بيشتغل جوه موبايلك، من غير نت ومن غير ما كلامك يخرج من الموبايل. محتاجين نحمّله مرة واحدة بس.</p>
     <h3>اختار العقل</h3>
     <div id="modelOptions" style="display:grid;gap:10px"></div>
@@ -241,7 +241,7 @@ button:disabled { opacity: .45; cursor: default; }
     <p id="currentModel" style="font-size:14px"></p>
     <button class="ghost" id="changeModel">غيّر العقل</button>
     <button class="ghost" id="clearChat">امسح المحادثة</button>
-    <div class="note">على الآيفون: من Safari دوس زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»، عشان عم الناس يبقى زي أي تطبيق.</div>
+    <div class="note">على الآيفون: من Safari دوس زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»، عشان ميجو يبقى زي أي تطبيق.</div>
   </div>
 </section>
 
@@ -255,18 +255,24 @@ const store = {
 };
 
 const MODELS = [
-  { key: "light", label: "الخفيف (المناسب لموبايلك)", desc: "سريع وما بيسخّنش الموبايل، وحجمه حوالي 350 ميجا.",
-    f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
-  { key: "normal", label: "الأذكى (تقيل)", desc: "كلامه أحسن، بس تقيل: محتاج آيفون 15 برو أو أحدث، وممكن يسخّن الموبايل.",
+  { key: "genius", label: "العبقري", desc: "أذكى واحد، وحجمه حوالي 1.8 جيجا. تقيل وممكن يسخّن الموبايل، ولو الموبايل ما استحملهوش هيرجع للعادي لوحده.",
+    f16: "Qwen2.5-3B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-3B-Instruct-q4f32_1-MLC" },
+  { key: "normal", label: "العادي", desc: "ذكي، وحجمه حوالي 1 جيجا.",
     f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
+  { key: "light", label: "الخفيف", desc: "أسرع ومش بيسخّن، بس كلامه أبسط (حوالي 350 ميجا).",
+    f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
 ];
+// لو الموبايل ما استحملش عقل، بنرجع للي أصغر منه
+const FALLBACK = { genius: "normal", normal: "light" };
+// ذاكرة محادثة أقصر = رامات أقل بكتير
+const CHAT_OPTS = { context_window_size: 2048, prefill_chunk_size: 512 };
 
 const $ = (id) => document.getElementById(id);
 let engine = null;
 let busy = false;
 let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
-if (!store.get("migrated_v3", false)) { store.set("model", "light"); store.set("migrated_v3", true); }
-let selected = store.get("model", "light");
+if (!store.get("migrated_v4", false)) { store.set("model", "genius"); store.set("migrated_v4", true); }
+let selected = store.get("model", "genius");
 let tts = store.get("tts", true);
 
 /* ---------------- الذاكرة ---------------- */
@@ -283,7 +289,7 @@ function persona() {
   const days = ["الحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"];
   const time = `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} الساعة ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
   const m = mem.all();
-  return `إنت "عم الناس"، مساعد مصري ابن بلد شغال جوه الموبايل. بتتكلم عامية مصرية شعبي بس، زي كلام القهوة والحارة، ومش بتتكلم فصحى أبدًا.
+  return `إنت "عم الناس"، مساعد مصري ابن بلد شغال جوه تطبيق "ميجو" على الموبايل. بتتكلم عامية مصرية شعبي بس، زي كلام القهوة والحارة، ومش بتتكلم فصحى أبدًا.
 - دمك خفيف، وكلامك قصير: جملة لتلات جمل، إلا لو صاحبك طلب كتابة طويلة.
 - بتقول أحيانًا: "يا باشا"، "يا معلم"، "من عينيا"، "ولا يهمك"، "على راسي".
 - محترم دايمًا، من غير شتيمة.
@@ -405,13 +411,15 @@ async function send(text) {
   } catch (e) {
     history.pop();
     const m = String(e?.message || e);
-    if (/disposed|device.*lost|out of memory|OOM/i.test(m)) {
-      // الموبايل قفل كارت الشاشة عن العقل (غالبًا لأنه تقيل): نصحيه تاني بالخفيف
+    if (/disposed|device.*lost|out of memory|OOM|memory/i.test(m) && FALLBACK[selected]) {
       engine = null;
+      const next = FALLBACK[selected];
+      const name = MODELS.find((x) => x.key === next).label;
       reply.className = "msg err";
-      reply.textContent = "العقل تقيل على الموبايل، فهصحى بالخفيف. ثواني وابعت رسالتك تاني.";
-      selected = "light"; store.set("model", "light");
-      loadEngine(false).then(() => { reply.textContent = "خلاص يا باشا، صحيت. ابعت رسالتك تاني."; reply.className = "msg him"; })
+      reply.textContent = `الموبايل ما استحملش العقل ده، فهصحى بـ«${name}». ثواني وابعت رسالتك تاني.`;
+      selected = next; store.set("model", next);
+      setStatus("بيصحصح...");
+      loadEngine(false).then(() => { reply.textContent = `خلاص يا باشا، صحيت بـ«${name}». ابعت رسالتك تاني.`; reply.className = "msg him"; })
         .catch((err) => { reply.textContent = explain(err); });
     } else {
       reply.className = "msg err";
@@ -501,8 +509,8 @@ async function loadEngine(showProgress) {
     if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = /cache|Loading model from cache/i.test(r.text || "") ? `بيصحى من الموبايل... ${p}%` : `بيتحمّل... ${p}% (أول مرة بس)`; }
     setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيجهّز العقل... (ممكن ياخد دقيقة)");
   };
-  if (engine) { await engine.reload(id); }
-  else engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProgress });
+  if (engine) { await engine.reload(id, CHAT_OPTS); }
+  else engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onProgress }, CHAT_OPTS);
   store.set("model", selected); store.set("ready", true);
   $("currentModel").textContent = `${m.label}: ${m.desc}`;
   setStatus("جاهز ومستنيك"); setBusy(false);
@@ -554,8 +562,8 @@ function showWaking() {
 function showSlowHelp() {
   const el = bubble("err", "عم الناس طوّل وهو بيصحى. غالبًا العقل «العادي» تقيل على الموبايل ده.");
   const box = document.createElement("div"); box.className = "actions"; box.style.justifyContent = "center";
-  const light = document.createElement("a"); light.href = "#"; light.textContent = "جرّب الخفيف";
-  light.onclick = (e) => { e.preventDefault(); selected = "light"; renderOptions(); $("startDl").disabled = false; $("dl").hidden = true; $("setup").hidden = false; };
+  const light = document.createElement("a"); light.href = "#"; light.textContent = "جرّب عقل أخف";
+  light.onclick = (e) => { e.preventDefault(); selected = FALLBACK[selected] || "light"; renderOptions(); $("startDl").disabled = false; $("dl").hidden = true; $("setup").hidden = false; };
   const again = document.createElement("a"); again.href = "#"; again.textContent = "حاول تاني";
   again.onclick = (e) => { e.preventDefault(); location.reload(); };
   box.append(light, again); el.appendChild(box);
@@ -578,8 +586,12 @@ if (store.get("ready", false)) {
     if (pending) { const t = pending; pending = null; chat.lastElementChild?.remove(); send(t); }
   }).catch((e) => {
     clearInterval(watchdog); wakingEl?.remove();
-    bubble("err", explain(e));
-    showSlowHelp();
+    const next = FALLBACK[selected];
+    if (next && /disposed|device.*lost|memory|OOM/i.test(String(e?.message || e))) {
+      engine = null; selected = next; store.set("model", next);
+      bubble("err", `الموبايل ما استحملش العقل، فهجرّب «${MODELS.find((x) => x.key === next).label}».`);
+      loadEngine(false).catch((e2) => { bubble("err", explain(e2)); showSlowHelp(); });
+    } else { bubble("err", explain(e)); showSlowHelp(); }
   });
 } else {
   setStatus("محتاج يتحمّل أول مرة");
