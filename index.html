@@ -255,17 +255,17 @@ const store = {
 };
 
 const MODELS = [
-  { key: "light", label: "الخفيف (ننصح بيه)", desc: "سريع، وحجمه حوالي 350 ميجا بس. بيتحمّل في دقايق.",
-    f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
-  { key: "normal", label: "الأذكى", desc: "كلامه أحسن، بس حجمه حوالي 1 جيجا وبيتحمّل أبطأ.",
+  { key: "normal", label: "العادي", desc: "أذكى وكلامه أحسن، وحجمه حوالي 1 جيجا. بيتحمّل أول مرة بس.",
     f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
+  { key: "light", label: "الخفيف", desc: "أسرع وأصغر (حوالي 350 ميجا)، بس أبسط في الكلام.",
+    f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
 ];
 
 const $ = (id) => document.getElementById(id);
 let engine = null;
 let busy = false;
 let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
-let selected = store.get("model", "light");
+let selected = store.get("model", "normal");
 let tts = store.get("tts", true);
 
 /* ---------------- الذاكرة ---------------- */
