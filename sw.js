@@ -1,6 +1,6 @@
-// بيخزن واجهة عم حسن عشان تفتح من غير نت.
+// بيخزن واجهة عم الناس عشان تفتح من غير نت.
 // (العقل نفسه بيتخزن لوحده جوه المتصفح بعد أول تحميل)
-const CACHE = "sahbi-shell-v1";
+const CACHE = "sahbi-shell-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {

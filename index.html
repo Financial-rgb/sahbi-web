@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>عم حسن</title>
+<title>عم الناس</title>
 <meta name="description" content="مساعد مصري ابن بلد، عقله شغال جوه موبايلك من غير نت">
 <meta name="theme-color" content="#0e5c4f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="عم حسن">
+<meta name="apple-mobile-web-app-title" content="عم الناس">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -173,9 +173,9 @@ button:disabled { opacity: .45; cursor: default; }
 <body>
 
 <header>
-  <div class="avatar" aria-hidden="true">ح</div>
+  <div class="avatar" aria-hidden="true">ن</div>
   <div class="who">
-    <h1 id="title">عم حسن</h1>
+    <h1 id="title">عم الناس</h1>
     <div class="status" id="status">بيصحصح...</div>
   </div>
   <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
@@ -185,10 +185,10 @@ button:disabled { opacity: .45; cursor: default; }
 
 <main id="chat" aria-live="polite">
   <div class="hello" id="hello">
-    <h2>أهلًا يا باشا، أنا عم حسن</h2>
+    <h2>أهلًا يا باشا، أنا عم الناس</h2>
     <p>دوس على المايك واتكلم، أو اكتبلي.</p>
     <div class="chips" id="chips">
-      <button type="button">عامل إيه يا عم حسن؟</button>
+      <button type="button">عامل إيه يا عم الناس؟</button>
       <button type="button">احكيلي نكتة</button>
       <button type="button">اكتبلي رسالة اعتذار لصاحبي</button>
       <button type="button">أعمل فطار إيه النهارده؟</button>
@@ -212,8 +212,8 @@ button:disabled { opacity: .45; cursor: default; }
 <!-- أول تشغيل: تحميل العقل -->
 <section class="sheet" id="setup" hidden>
   <div class="sheet-inner">
-    <h2>أهلًا بيك عند عم حسن</h2>
-    <p>عقل عم حسن بيشتغل جوه موبايلك، من غير نت ومن غير ما كلامك يخرج من الموبايل. محتاجين نحمّله مرة واحدة بس.</p>
+    <h2>أهلًا بيك عند عم الناس</h2>
+    <p>عقل عم الناس بيشتغل جوه موبايلك، من غير نت ومن غير ما كلامك يخرج من الموبايل. محتاجين نحمّله مرة واحدة بس.</p>
     <h3>اختار العقل</h3>
     <div id="modelOptions" style="display:grid;gap:10px"></div>
     <div class="note">💡 حمّله على واي فاي، وخلّي الصفحة مفتوحة لحد ما يخلص.</div>
@@ -241,7 +241,7 @@ button:disabled { opacity: .45; cursor: default; }
     <p id="currentModel" style="font-size:14px"></p>
     <button class="ghost" id="changeModel">غيّر العقل</button>
     <button class="ghost" id="clearChat">امسح المحادثة</button>
-    <div class="note">على الآيفون: من Safari دوس زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»، عشان عم حسن يبقى زي أي تطبيق.</div>
+    <div class="note">على الآيفون: من Safari دوس زرار المشاركة ⬆️ ← «إضافة إلى الشاشة الرئيسية»، عشان عم الناس يبقى زي أي تطبيق.</div>
   </div>
 </section>
 
@@ -255,17 +255,17 @@ const store = {
 };
 
 const MODELS = [
-  { key: "normal", label: "العادي", desc: "أذكى، وحجمه حوالي 1 جيجا. مناسب لآيفون 12 وأحدث.",
-    f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
-  { key: "light", label: "الخفيف", desc: "أسرع وأصغر (حوالي 400 ميجا)، بس أبسط في الكلام.",
+  { key: "light", label: "الخفيف (ننصح بيه)", desc: "سريع، وحجمه حوالي 350 ميجا بس. بيتحمّل في دقايق.",
     f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC" },
+  { key: "normal", label: "الأذكى", desc: "كلامه أحسن، بس حجمه حوالي 1 جيجا وبيتحمّل أبطأ.",
+    f16: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC" },
 ];
 
 const $ = (id) => document.getElementById(id);
 let engine = null;
 let busy = false;
 let history = [];               // آخر الرسايل (من غير تعليمات الشخصية)
-let selected = store.get("model", "normal");
+let selected = store.get("model", "light");
 let tts = store.get("tts", true);
 
 /* ---------------- الذاكرة ---------------- */
@@ -282,7 +282,7 @@ function persona() {
   const days = ["الحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"];
   const time = `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} الساعة ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
   const m = mem.all();
-  return `إنت "عم حسن"، مساعد مصري ابن بلد شغال جوه الموبايل. بتتكلم عامية مصرية شعبي بس، زي كلام القهوة والحارة، ومش بتتكلم فصحى أبدًا.
+  return `إنت "عم الناس"، مساعد مصري ابن بلد شغال جوه الموبايل. بتتكلم عامية مصرية شعبي بس، زي كلام القهوة والحارة، ومش بتتكلم فصحى أبدًا.
 - دمك خفيف، وكلامك قصير: جملة لتلات جمل، إلا لو صاحبك طلب كتابة طويلة.
 - بتقول أحيانًا: "يا باشا"، "يا معلم"، "من عينيا"، "ولا يهمك"، "على راسي".
 - محترم دايمًا، من غير شتيمة.
@@ -479,7 +479,7 @@ async function loadEngine(showProgress) {
   const id = modelId(m, await f16Supported());
   const onProgress = (r) => {
     const p = Math.round((r.progress || 0) * 100);
-    if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = `بيتحمّل... ${p}%`; }
+    if (showProgress) { $("barFill").style.width = p + "%"; $("progressText").textContent = /cache|Loading model from cache/i.test(r.text || "") ? `بيصحى من الموبايل... ${p}%` : `بيتحمّل... ${p}% (أول مرة بس)`; }
     setStatus(p < 100 ? `بيصحصح... ${p}%` : "بيصحصح...");
   };
   if (engine) { await engine.reload(id); }
