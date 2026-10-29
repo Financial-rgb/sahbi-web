@@ -81,6 +81,13 @@ header {
   display: grid; place-items: center; color: inherit;
 }
 .icon-btn svg { width: 24px; height: 24px; }
+.hf-btn {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  background: rgba(255,255,255,.14); color: inherit; border: 1px solid rgba(255,255,255,.35);
+  border-radius: 999px; padding: 7px 12px; font-size: 14px; font-weight: 700;
+}
+.hf-btn svg { width: 18px; height: 18px; }
+.hf-btn.on { background: var(--copper); border-color: var(--copper); color: #fff; animation: pulse 1.6s infinite; }
 
 main {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -178,6 +185,10 @@ button:disabled { opacity: .45; cursor: default; }
     <h1 id="title">ميجو</h1>
     <div class="status" id="status">بيصحصح...</div>
   </div>
+  <button class="hf-btn" id="hfBtn" aria-pressed="false" aria-label="وضع ميجو: كلّمه من غير ما تدوس">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2"/></svg>
+    <span>وضع ميجو</span>
+  </button>
   <button class="icon-btn" id="openSettings" aria-label="الإعدادات">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -186,7 +197,7 @@ button:disabled { opacity: .45; cursor: default; }
 <main id="chat" aria-live="polite">
   <div class="hello" id="hello">
     <h2>أهلًا يا باشا، أنا عم الناس</h2><p style="margin:0;color:var(--copper);font-weight:700">ميجو</p>
-    <p>دوس على المايك واتكلم، أو اكتبلي.</p>
+    <p>دوس «وضع ميجو» فوق مرة واحدة، وبعدها قول «ميجو» وكلّمني على طول. أو اكتبلي.</p>
     <div class="chips" id="chips">
       <button type="button">عامل إيه يا عم الناس؟</button>
       <button type="button">احكيلي نكتة</button>
@@ -446,18 +457,27 @@ if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged 
 function clean(t) {
   return t.replace(/```[\s\S]*?```/g, " ").replace(/https?:\/\/\S+/g, "").replace(/[*#_`>|\[\]]/g, "").slice(0, 600);
 }
+let speaking = false;
 function speak(t) {
-  if (!tts || !("speechSynthesis" in window)) return;
+  if (!tts || !("speechSynthesis" in window)) { resumeHandsFree(); return; }
   const u = new SpeechSynthesisUtterance(clean(t));
   u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = 1;
+  // وهو بيتكلم بنقفل السمع عشان ما يسمعش صوته هو
+  pauseHandsFree();
+  speaking = true;
+  u.onend = u.onerror = () => { speaking = false; resumeHandsFree(); };
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-function stopSpeaking() { try { speechSynthesis.cancel(); } catch {} }
+function stopSpeaking() { try { speechSynthesis.cancel(); } catch {} speaking = false; }
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const noSR = () => bubble("err", "المتصفح ده مش بيدعم الكلام بالصوت. افتح ميجو من Safari.");
+const micDenied = () => bubble("err", "محتاج إذن المايك. من الإعدادات ← Safari ← المايكروفون، اختار «سماح».");
+
+/* ---- كلام عادي بزرار المايك ---- */
 let rec = null, listening = false;
-$("mic").addEventListener("click", () => {
-  if (!SR) { bubble("err", "المتصفح ده مش بيدعم الكلام بالصوت. اكتب رسالتك، أو افتح الصفحة من Safari."); return; }
+function pushToTalk() {
+  if (!SR) return noSR();
   if (listening) { rec?.stop(); return; }
   stopSpeaking();
   rec = new SR();
@@ -472,16 +492,82 @@ $("mic").addEventListener("click", () => {
     }
     $("listening").textContent = finalText + interim || "سامعك، اتكلم...";
   };
-  rec.onerror = (e) => {
-    if (e.error === "not-allowed") bubble("err", "محتاج إذن المايك. من الإعدادات ← Safari ← المايكروفون، اختار «سماح».");
-  };
+  rec.onerror = (e) => { if (e.error === "not-allowed") micDenied(); };
   rec.onend = () => {
     listening = false; $("mic").classList.remove("on"); $("listening").hidden = true;
     if (finalText.trim()) send(finalText);
   };
   rec.start();
+}
+
+/* ---- وضع ميجو: سامعك على طول، وبيصحى لما تقول «ميجو» ---- */
+const WAKE = /(ميجو|ميغو|ميقو|مي جو|ميجوو|مجو|ميكو|mego|migo)/i;
+let handsFree = false, hfRec = null, hfPaused = false, awaiting = false, awaitTimer = null, wakeLock = null;
+
+function hfStatus(t) { $("listening").hidden = !handsFree; $("listening").textContent = t; }
+
+function startHf() {
+  if (!handsFree || hfPaused || hfRec) return;
+  hfRec = new SR();
+  hfRec.lang = "ar-EG"; hfRec.continuous = true; hfRec.interimResults = false;
+  hfRec.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) onHeard(e.results[i][0].transcript.trim());
+    }
+  };
+  hfRec.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") { setHandsFree(false); micDenied(); }
+  };
+  // سفاري بيقفل السمع كل شوية، فبنرجّعه لوحده
+  hfRec.onend = () => { hfRec = null; if (handsFree && !hfPaused) setTimeout(startHf, 250); };
+  try { hfRec.start(); hfStatus(awaiting ? "أيوه يا باشا، سامعك..." : "قول «ميجو» وكلّمني..."); } catch { hfRec = null; }
+}
+function pauseHandsFree() { if (!handsFree) return; hfPaused = true; try { hfRec?.abort(); } catch {} hfRec = null; }
+function resumeHandsFree() { if (!handsFree) return; hfPaused = false; setTimeout(startHf, 400); }
+
+function onHeard(text) {
+  if (!text || busy || speaking) return;
+  if (awaiting) {                       // قال «ميجو» قبلها، فده الطلب نفسه
+    clearTimeout(awaitTimer); awaiting = false;
+    send(text); return;
+  }
+  const m = text.match(WAKE);
+  if (!m) return;                        // كلام مش موجّه لميجو
+  const rest = text.slice(m.index + m[0].length).replace(/^[\s،,.!؟?]+/, "").trim();
+  if (rest.length > 1) { send(rest); return; }
+  // قال «ميجو» بس: يرد ويستنى الطلب
+  awaiting = true;
+  speak("أيوه يا باشا؟");
+  clearTimeout(awaitTimer);
+  awaitTimer = setTimeout(() => { awaiting = false; hfStatus("قول «ميجو» وكلّمني..."); }, 10000);
+}
+
+async function keepScreenOn(on) {
+  try {
+    if (on && "wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    else { await wakeLock?.release(); wakeLock = null; }
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && handsFree) { keepScreenOn(true); resumeHandsFree(); }
 });
 
+function setHandsFree(on) {
+  if (on && !SR) return noSR();
+  handsFree = on; store.set("handsFree", on);
+  $("hfBtn").setAttribute("aria-pressed", String(on));
+  $("hfBtn").classList.toggle("on", on);
+  if (on) {
+    stopSpeaking(); hfPaused = false; startHf(); keepScreenOn(true);
+    bubble("him", "وضع ميجو اشتغل. قول «ميجو» وبعدها اطلب اللي إنت عايزه، من غير ما تدوس على حاجة. خلّي الشاشة مفتوحة.");
+  } else {
+    clearTimeout(awaitTimer); awaiting = false;
+    try { hfRec?.abort(); } catch {} hfRec = null;
+    $("listening").hidden = true; keepScreenOn(false);
+  }
+}
+$("hfBtn").addEventListener("click", () => setHandsFree(!handsFree));
+$("mic").addEventListener("click", () => { if (handsFree) setHandsFree(false); pushToTalk(); });
 /* ---------------- تحميل العقل ---------------- */
 async function f16Supported() {
   try { const a = await navigator.gpu.requestAdapter(); return !!a && a.features.has("shader-f16"); } catch { return false; }
@@ -514,6 +600,11 @@ async function loadEngine(showProgress) {
   store.set("model", selected); store.set("ready", true);
   $("currentModel").textContent = `${m.label}: ${m.desc}`;
   setStatus("جاهز ومستنيك"); setBusy(false);
+  if (store.get("handsFree", false) && !handsFree) hfStatusHint();
+}
+function hfStatusHint() {
+  $("listening").hidden = false;
+  $("listening").textContent = "دوس «وضع ميجو» فوق مرة واحدة، وبعدها كلّمه على طول.";
 }
 
 function explain(e) {
